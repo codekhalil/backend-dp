@@ -1,0 +1,15 @@
+{
+  "name": "backend-dp",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/app.js",
+  "scripts": {
+    "dev": "node src/app.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pg": "^8.11.5",
+    "dotenv": "^16.4.5",
+    "cors": "^2.8.5"
+  }
+}
