@@ -28,7 +28,13 @@ router.post("/", async (req, res) => {
         status
       } = e;
 
-      if (!streetlight_id || !flight_id || !status) {
+      if (
+        !streetlight_id ||
+        !flight_id ||
+        !utc_datetime ||
+        lux == null ||
+        !status
+      ) {
         throw new Error("Invalid streetlight event payload");
       }
 
@@ -48,6 +54,54 @@ router.post("/", async (req, res) => {
     res.status(500).json({ error: "Failed to insert streetlight events" });
   } finally {
     client.release();
+  }
+});
+
+/**
+ * Get streetlight events
+ * GET /streetlight-events
+ * Optional query params:
+ *   ?streetlight_id=<uuid>
+ *   ?flight_id=<uuid>
+ */
+router.get("/", async (req, res) => {
+  const { streetlight_id, flight_id } = req.query;
+
+  try {
+    let query = `
+      SELECT
+        id,
+        streetlight_id,
+        flight_id,
+        utc_datetime,
+        lux,
+        status
+      FROM streetlight_events
+    `;
+    const params = [];
+    const conditions = [];
+
+    if (streetlight_id) {
+      params.push(streetlight_id);
+      conditions.push(`streetlight_id = $${params.length}`);
+    }
+
+    if (flight_id) {
+      params.push(flight_id);
+      conditions.push(`flight_id = $${params.length}`);
+    }
+
+    if (conditions.length > 0) {
+      query += " WHERE " + conditions.join(" AND ");
+    }
+
+    query += " ORDER BY utc_datetime DESC";
+
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch streetlight events" });
   }
 });
 

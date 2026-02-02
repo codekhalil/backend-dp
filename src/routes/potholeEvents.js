@@ -49,4 +49,40 @@ router.post("/", async (req, res) => {
   }
 });
 
+/**
+ * Get pothole events
+ * GET /pothole-events
+ * Optional query: ?flight_id=<uuid>
+ */
+router.get("/", async (req, res) => {
+  const { flight_id } = req.query;
+
+  try {
+    let query = `
+      SELECT
+        id,
+        lat,
+        lon,
+        confidence,
+        flight_id,
+        created_at
+      FROM pothole_events
+    `;
+    const params = [];
+
+    if (flight_id) {
+      query += " WHERE flight_id = $1";
+      params.push(flight_id);
+    }
+
+    query += " ORDER BY created_at DESC";
+
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch pothole events" });
+  }
+});
+
 export default router;
