@@ -64,8 +64,7 @@ router.get("/", async (req, res) => {
         lat,
         lon,
         confidence,
-        flight_id,
-        created_at
+        flight_id
       FROM pothole_events
     `;
     const params = [];
@@ -75,7 +74,7 @@ router.get("/", async (req, res) => {
       params.push(flight_id);
     }
 
-    query += " ORDER BY created_at DESC";
+    query += " ORDER BY id DESC";
 
     const result = await pool.query(query, params);
     res.json(result.rows);
