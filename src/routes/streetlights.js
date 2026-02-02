@@ -29,9 +29,17 @@ router.get("/status", async (_req, res) => {
       WITH latest_flight AS (
         SELECT
           streetlight_id,
-          MAX(flight_id) AS latest_flight_id
+          flight_id,
+          MAX(utc_datetime) AS last_seen
         FROM streetlight_events
-        GROUP BY streetlight_id
+        GROUP BY streetlight_id, flight_id
+      ),
+      latest_per_streetlight AS (
+        SELECT DISTINCT ON (streetlight_id)
+          streetlight_id,
+          flight_id
+        FROM latest_flight
+        ORDER BY streetlight_id, last_seen DESC
       )
       SELECT
         s.id AS streetlight_id,
@@ -51,13 +59,13 @@ router.get("/status", async (_req, res) => {
           ELSE 'OFF'
         END AS inferred_status
       FROM streetlights s
-      JOIN latest_flight lf
+      JOIN latest_per_streetlight lf
         ON s.id = lf.streetlight_id
       JOIN streetlight_events e
         ON e.streetlight_id = lf.streetlight_id
-       AND e.flight_id = lf.latest_flight_id
+       AND e.flight_id = lf.flight_id
       GROUP BY s.id, s.latitude, s.longitude, e.flight_id
-      ORDER BY s.id
+      ORDER BY s.id;
     `;
 
     const result = await pool.query(query);
