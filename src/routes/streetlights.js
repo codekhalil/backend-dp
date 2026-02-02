@@ -14,8 +14,8 @@ router.get("/", async (_req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch streetlights" });
+    console.error("STREETLIGHT STATUS ERROR:", err.message);
+    res.status(500).json({ error:err.message });
   }
 });
 
